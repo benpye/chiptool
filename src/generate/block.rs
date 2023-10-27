@@ -39,16 +39,24 @@ pub fn render(opts: &super::Options, ir: &IR, b: &Block, path: &str) -> Result<T
                     Access::Read => quote!(#common_path::R),
                     Access::Write => quote!(#common_path::W),
                     Access::ReadWrite => quote!(#common_path::RW),
+                    Access::UnsafeRead => quote!(#common_path::UR),
+                    Access::UnsafeWrite => quote!(#common_path::UW),
+                    Access::ReadUnsafeWrite => quote!(#common_path::RUW),
+                    Access::UnsafeReadUnsafeWrite => quote!(#common_path::URUW),
                 };
 
                 let ty = quote!(#common_path::Reg<#reg_ty, #access>);
                 if let Some(array) = &i.array {
-                    let (len, offs_expr) = super::process_array(array);
+                    let (min_index, max_index, offs_expr) = super::process_array(array);
                     items.extend(quote!(
                         #doc
                         #[inline(always)]
                         pub const fn #name(self, n: usize) -> #ty {
-                            assert!(n < #len);
+                            #[allow(unused_comparisons)]
+                            {
+                                assert!(n >= #min_index);
+                                assert!(n <= #max_index);
+                            }
                             unsafe { #common_path::Reg::from_ptr(self.ptr.add(#offset + #offs_expr) as _) }
                         }
                     ));
@@ -67,13 +75,17 @@ pub fn render(opts: &super::Options, ir: &IR, b: &Block, path: &str) -> Result<T
                 let _b2 = ir.blocks.get(block_path).unwrap();
                 let ty = util::relative_path(block_path, path);
                 if let Some(array) = &i.array {
-                    let (len, offs_expr) = super::process_array(array);
+                    let (min_index, max_index, offs_expr) = super::process_array(array);
 
                     items.extend(quote!(
                         #doc
                         #[inline(always)]
                         pub const fn #name(self, n: usize) -> #ty {
-                            assert!(n < #len);
+                            #[allow(unused_comparisons)]
+                            {
+                                assert!(n >= #min_index);
+                                assert!(n <= #max_index);
+                            }
                             unsafe { #ty::from_ptr(self.ptr.add(#offset + #offs_expr) as _) }
                         }
                     ));

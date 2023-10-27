@@ -190,6 +190,7 @@ pub fn convert_peripheral(ir: &mut IR, p: &svd::Peripheral) -> anyhow::Result<()
                         Some(Array::Regular(RegularArray {
                             len: dim.dim,
                             stride: dim.dim_increment,
+                            start_index: 0,
                         }))
                     } else {
                         None
@@ -230,6 +231,7 @@ pub fn convert_peripheral(ir: &mut IR, p: &svd::Peripheral) -> anyhow::Result<()
                         Some(Array::Regular(RegularArray {
                             len: dim.dim,
                             stride: dim.dim_increment,
+                            start_index: 0,
                         }))
                     } else {
                         None

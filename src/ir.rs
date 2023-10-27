@@ -107,11 +107,15 @@ pub enum Array {
 pub struct RegularArray {
     pub len: u32,
     pub stride: u32,
+    #[serde(default)]
+    pub start_index: u32,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct CursedArray {
     pub offsets: Vec<u32>,
+    #[serde(default)]
+    pub start_index: u32,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -133,6 +137,10 @@ pub enum Access {
     ReadWrite,
     Read,
     Write,
+    UnsafeRead,
+    UnsafeWrite,
+    ReadUnsafeWrite,
+    UnsafeReadUnsafeWrite,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

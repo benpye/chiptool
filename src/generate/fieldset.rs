@@ -65,12 +65,16 @@ pub fn render(_opts: &super::Options, ir: &IR, fs: &FieldSet, path: &str) -> Res
         }
 
         if let Some(array) = &f.array {
-            let (len, offs_expr) = super::process_array(array);
+            let (min_index, max_index, offs_expr) = super::process_array(array);
             items.extend(quote!(
                 #doc
                 #[inline(always)]
                 pub const fn #name(&self, n: usize) -> #field_ty{
-                    assert!(n < #len);
+                    #[allow(unused_comparisons)]
+                    {
+                        assert!(n >= #min_index);
+                        assert!(n <= #max_index);
+                    }
                     let offs = #bit_offset + #offs_expr;
                     let val = (self.0 >> offs) & #mask;
                     #from_bits
@@ -78,7 +82,11 @@ pub fn render(_opts: &super::Options, ir: &IR, fs: &FieldSet, path: &str) -> Res
                 #doc
                 #[inline(always)]
                 pub fn #name_set(&mut self, n: usize, val: #field_ty) {
-                    assert!(n < #len);
+                    #[allow(unused_comparisons)]
+                    {
+                        assert!(n >= #min_index);
+                        assert!(n <= #max_index);
+                    }
                     let offs = #bit_offset + #offs_expr;
                     self.0 = (self.0 & !(#mask << offs)) | (((#to_bits) & #mask) << offs);
                 }
